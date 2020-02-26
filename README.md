@@ -2,14 +2,16 @@
 
 ### Prerequisites
 
-Before using this program, go to the `CrisprOpenDB/` directory and download the spacer database (http://crispr.genome.ulaval.ca/dash/SpacersDB.fasta).
+Before using this program, download the spacer database in the working directory (http://crispr.genome.ulaval.ca/dash/SpacersDB.fasta).
 
-Then go the `CrisprOpenDB/CrisprOpenDB/` directory and dowload the sqlite file (http://crispr.genome.ulaval.ca/dash/CrisprOpenDB.sqlite). 
+Then go to the `CrisprOpenDB/` directory and download the sqlite file (http://crispr.genome.ulaval.ca/dash/CrisprOpenDB.sqlite). 
 
-### Execution
+Once these steps are complete, you must go back to the previous directory to run the program.
 
-To run the program, you must launch the `CrisperOpenDB_HostID.py` file in the `CrisprOpenDB` directory.
-Here is an example of how run the program using a *Salmonella* phage genome and 2 mismatches:
+### Running
+
+To run the program, you must launch the `CrisperOpenDB_HostID.py` file in the working directory.
+Here is an example of how to run the program using a *Salmonella* phage genome and a number of mismatches of 2:
 ```python
 python CrisprOpenDB_HostID.py -i Salmonella_161.fasta -m 2
 ```
