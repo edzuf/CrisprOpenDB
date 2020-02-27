@@ -5,11 +5,12 @@ from uuid import uuid4
 import pandas as pd
 import numpy as np
 import argparse
-from CrisprOpenDB import CrisprOpenDB
+from SpacersDB import CrisprOpenDB
 
 class PhageHostFinder:
     def __init__(self):
-        self._database = "SpacersDB.fasta"
+        self._blast_database = "SpacersDB"
+        self._fasta_database = "SpacersDB.fasta"
         self._alignement_results = None
         self._spacer_table= None
 
@@ -33,9 +34,29 @@ class PhageHostFinder:
             sys.exit()
         self._alignement_results = fasta_result_table
     
+    def _run_blastn(self, fasta_file):
+        command = "blastn -task 'blastn' -query {} -db {} -outfmt 6 ".format(fasta_file, self._blast_database)
+        print("Running command... {}".format(command))
+        command = shlex.split(command)
+        p = subprocess.Popen(command, stdout=subprocess.PIPE)
+        p.wait()
+        p = p.stdout.read()
+
+        columns = ["Query", "SPACER_ID", "identity", "alignement_length", 
+        "mismatch", "gap", "q_start", "q_end", "s_start", "s_end", "e_value", "score"]
+
+        blastn_out = io.StringIO(p.decode("utf-8"))
+        blastn_out.seek(0)
+        blastn_result_table = pd.read_table(blastn_out, names=columns)
+
+        if len(blastn_result_table) == 0:
+            print("No hits found. Sorry!")
+            sys.exit()
+        self._alignement_results = blastn_result_table
+    
     def _load_spacer_table(self):
         t1 = time.time()
-        db_explorer = CrisprOpenDB.CrisprOpenDB(os.path.join("CrisprOpenDB", "CrisprOpenDB.sqlite"))
+        db_explorer = CrisprOpenDB.CrisprOpenDB(os.path.join("SpacersDB", "CrisprOpenDB.sqlite"))
         df = pd.read_sql_query("select ST.SPACER_ID, ST.GENEBANK_ID, ORG.ORGANISM_NAME, ORG.SPECIES, ORG.GENUS, ORG.FAMILY, ORG.TORDER, ST.SPACER, ST.SPACER_LENGTH, SAL.COUNT_SPACER, ST.POSITION_INSIDE_LOCUS  \
             from ORGANISM ORG, SPACER_TABLE ST, SPACER_ARRAY_LENGTH SAL \
             where ST.GENEBANK_ID=ORG.GENEBANK_ID and ST.GENEBANK_ID=SAL.GENEBANK_ID and ST.NUMERO_LOCUS=SAL.NUMERO_LOCUS", db_explorer._connection)
@@ -62,7 +83,7 @@ class PhageHostFinder:
 
         #Criteria 1: If only one genus, it is the host.
         if len(set(fasta_result_table["GENUS"])) == 1:
-            print("Host is {}. Found using criteria #1".format(fasta_result_table["GENUS"][0]))
+            #print("Host is {}. Found using criteria #1".format(fasta_result_table["GENUS"][0]))
             return({"Query": fasta_result_table["Query"][0],
                 "Host": fasta_result_table["GENUS"][0], 
                 "Level": 1})
@@ -76,7 +97,7 @@ class PhageHostFinder:
         most_commons_genus = counted_genus.most_common()
         print(most_commons_genus)
         if most_commons_genus[0][1] != most_commons_genus[1][1]: # If count is not equal, we found host
-            print("Host is {}. Found using criteria #2".format(most_commons_genus[0][0]))
+            #print("Host is {}. Found using criteria #2".format(most_commons_genus[0][0]))
             return({"Query": fasta_result_table["Query"][0],
                 "Host": most_commons_genus[0][0], 
                 "Level": 2})
@@ -97,7 +118,7 @@ class PhageHostFinder:
         #fasta_result_table.to_csv("TEST_CRITERIA3.csv")
         sub_section = fasta_result_table[fasta_result_table["five_prime_relative_position"] ==fasta_result_table["five_prime_relative_position"][0]]
         if len(sub_section==1):
-            print("Host is {}. Found using criteria #3".format(sub_section["GENUS"][0]))
+            #print("Host is {}. Found using criteria #3".format(sub_section["GENUS"][0]))
             return({"Query": fasta_result_table["Query"][0],
                 "Host": sub_section["GENUS"][0], 
                 "Level": 3})
@@ -121,39 +142,36 @@ class PhageHostFinder:
                 "Level": 4})
 
 
-    def identify(self, fasta_file, n_mismatch):
-        self._run_fasta_36(fasta_file)
+    def identify(self, fasta_file, n_mismatch, tool="blast"):
+        if tool == "blast":
+            self._run_blastn(fasta_file)
+        elif tool == "fasta36":
+            self._run_fasta_36(fasta_file)
+        
         for table in self.alignement_results:
             hostIdentification = self._findHost(table, n_mismatch)
             print(hostIdentification)
         return(hostIdentification)
-    
-   
 
-def find_criteria_four():
-    db_explorer = CrisprOpenDB.CrisprOpenDB(os.path.join("CrisprOpenDB", "CrisprOpenDB.sqlite"))
-    df = pd.read_sql_query("select a.SPACER_ID, b.SPACER_ID, a.GENUS, b.GENUS \
-        from T1 a, T1 b \
-        where a.SPACER_ID!=b.SPACER_ID \
-        and a.POSITION_INSIDE_LOCUS=b.POSITION_INSIDE_LOCUS \
-        and a.COUNT_SPACER=b.COUNT_SPACER \
-        and a.GENUS!=b.GENUS;", db_explorer._connection)
-    print(len(df))
-    df.to_csv("Searching_four.csv")
 
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument("-i", "--input", help="Input file in FASTA format.", required=True)
     parser.add_argument("-m", "--mismatch", help="Number of mismatches. Value must be between 0 and 5. If not specified, default value is 1.", type=int, default=1)
+    parser.add_argument("-a", "--aligner", help="Alignement tool to use. blast or fasta36", type=str, default="blast")
     args = parser.parse_args()
 
     if args.mismatch < 0 or args.mismatch > 5:
-	parser.print_help()
-	exit()
+        parser.print_help()
+        exit()
+    
+    if args.aligner not in ["blast", "fasta36"]:
+        parser.print_help()
+        exit()
 
     phf = PhageHostFinder()
-    results = phf.identify(args.input, args.mismatch)
+    results = phf.identify(args.input, args.mismatch, args.aligner)
 
     print(results)
 
