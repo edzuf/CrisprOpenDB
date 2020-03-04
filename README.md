@@ -4,7 +4,7 @@
 
 Before using this program, download the spacer database in the working directory (http://crispr.genome.ulaval.ca/dash/SpacersDB.fasta).
 
-Then go to the `CrisprOpenDB/` directory and download the sqlite file (http://crispr.genome.ulaval.ca/dash/CrisprOpenDB.sqlite). 
+Then go to the `SpacersDB/` directory and download the sqlite file (http://crispr.genome.ulaval.ca/dash/CrisprOpenDB.sqlite). 
 
 Once these steps are complete, you must go back to the previous directory to run the program.
 
