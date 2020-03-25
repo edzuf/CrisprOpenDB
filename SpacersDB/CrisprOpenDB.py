@@ -19,7 +19,11 @@ class CrisprOpenDB:
         self._cursor.execute("create table if not exists ORGANISM (\
             GENEBANK_ID text, \
             ORGANISM_NAME text, \
-            PRIMARY KEY (GENEBANK_ID))")
+            PRIMARY KEY (GENEBANK_ID), \
+            SPECIES text, \
+            GENUS text, \
+            FAMILY text, \
+            TORDER text)")
         self._cursor.execute("create table if not exists SPACER_TABLE (\
             SPACER_ID text, \
             SPACER text, \
@@ -192,20 +196,6 @@ class CrisprOpenDB:
              select SPACER_TABLE.GENEBANK_ID, ORGANISM_NAME, SPACER, SPACER_LENGTH  \
                 from ORGANISM, SPACER_TABLE \
                 where SPACER_TABLE.GENEBANK_ID=ORGANISM.GENEBANK_ID")
-        self._connection.commit()
-
-
-    def add_taxonomy_columns(self):
-        #self._cursor.execute("alter table ORGANISM \
-        #    add column SPECIES text;")
-        #self._cursor.execute("alter table ORGANISM \
-        #    add column GENUS text;")
-        #self._cursor.execute("alter table ORGANISM \
-        #    add column FAMILY text;")
-        #self._cursor.execute("alter table ORGANISM \
-        #    add column TORDER text;")
-        self._cursor.execute("alter table ORGANISM \
-            add column TORDER text;")
         self._connection.commit()
 
     def fill_taxonomy_columns(self):
