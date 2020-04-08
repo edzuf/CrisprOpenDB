@@ -17,4 +17,7 @@ python CrisprOpenDB_HostID.py -i Salmonella_161.fasta -m 2
 ```
 ### Options
 
-Alignment can be done using `blastn` or `fasta36`. If using Blast, please use makeblastdb before running.
+Alignment can be done using `blastn` or `fasta36`. If using Blast, please use `makeblastdb` before running. Here is the command line you should use when running `makeblastdb`:
+```python
+makeblastdb -in SpacersDB.fasta -dbtype nucl -out SpacersDB
+```
