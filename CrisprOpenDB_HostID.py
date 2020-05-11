@@ -154,7 +154,7 @@ class PhageHostFinder:
             print(fasta_result_table[["GENUS", "five_prime_relative_position"]])
         sub_section = fasta_result_table[fasta_result_table["five_prime_relative_position"] == fasta_result_table["five_prime_relative_position"][0]]
         
-        if len(sub_section) == 1:
+        if len(sub_section["GENUS"].unique().tolist()) == 1:
             if report:
                 print("Host is {}. Found using criteria #3".format(sub_section["GENUS"][0]))
             return({"Query": fasta_result_table["Query"][0],
