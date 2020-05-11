@@ -61,7 +61,7 @@ class PhageHostFinder:
         df = pd.read_sql_query("select ST.SPACER_ID, ST.GENEBANK_ID, ORG.ORGANISM_NAME, ORG.SPECIES, ORG.GENUS, ORG.FAMILY, ORG.TORDER, ST.SPACER, ST.SPACER_LENGTH, SAL.COUNT_SPACER, ST.POSITION_INSIDE_LOCUS  \
             from ORGANISM ORG, SPACER_TABLE ST, SPACER_ARRAY_LENGTH SAL \
             where ST.GENEBANK_ID=ORG.GENEBANK_ID and ST.GENEBANK_ID=SAL.GENEBANK_ID and ST.NUMERO_LOCUS=SAL.NUMERO_LOCUS", db_explorer._connection)
-        #print("Database query took: {}".format(time.time()-t1))
+        df.set_index("SPACER_ID", inplace=True)
         self._spacer_table = df
 
 
@@ -71,20 +71,18 @@ class PhageHostFinder:
            yield self._alignement_results[self._alignement_results["Query"] == query]
           
     def _findHost(self, alignement_table, n_mismatch, report, table_to_file):
-        if self._spacer_table is None: #Lazy loading. Only load if needed (if there are alignement results).
-            self._load_spacer_table()
-
-        
-        fasta_result_table = pd.merge(alignement_table, self._spacer_table, on="SPACER_ID", how="left")
-      
-        if table_to_file:
-            fasta_result_table.to_csv("{}.csv".format(fasta_result_table["Query"][0]))
+        fasta_result_table = alignement_table.copy()
 
         print("\n====================")
-        print("Query: {}".format(fasta_result_table["Query"][0]))
+        print("Query: {}".format(fasta_result_table["Query"].iloc[0]))
         print("====================")
 
-        fasta_result_table["true_num_mismatch"] = (fasta_result_table["SPACER_LENGTH"] - fasta_result_table["alignement_length"]) + fasta_result_table["mismatch"]
+        fasta_result_table.loc[:,"true_num_mismatch"] = (fasta_result_table.loc[:,"SPACER_LENGTH"] - fasta_result_table.loc[:,"alignement_length"]) + fasta_result_table.loc[:,"mismatch"]
+
+        if table_to_file:
+            fasta_result_table.to_csv("{}.csv".format(fasta_result_table["Query"].iloc[0]))
+
+        fasta_result_table = fasta_result_table[fasta_result_table.gap <= 0]
         fasta_result_table  = fasta_result_table[fasta_result_table.true_num_mismatch <= n_mismatch]
 
         if fasta_result_table.empty:
@@ -102,9 +100,9 @@ class PhageHostFinder:
 
         if len(set(fasta_result_table["GENUS"])) == 1:
             if report:
-                print("Host is {}. Found using criteria #1".format(fasta_result_table["GENUS"][0]))
-            return({"Query": fasta_result_table["Query"][0],
-                "Host": fasta_result_table["GENUS"][0], 
+                print("Host is {}. Found using criteria #1".format(fasta_result_table["GENUS"].iloc[0]))
+            return({"Query": fasta_result_table["Query"].iloc[0],
+                "Host": fasta_result_table["GENUS"].iloc[0],  
                 "Level": 1})
         if report:
             print("Multiple possible genuses:")
@@ -128,7 +126,7 @@ class PhageHostFinder:
         if most_commons_genus[0][1] != most_commons_genus[1][1]: # If count is not equal, we found host
             if report:
                 print("Host is {}. Found using criteria #2".format(most_commons_genus[0][0]))
-            return({"Query": fasta_result_table["Query"][0],
+            return({"Query": fasta_result_table["Query"].iloc[0],
                 "Host": most_commons_genus[0][0], 
                 "Level": 2})
         genuses_to_keep = []
@@ -148,7 +146,7 @@ class PhageHostFinder:
         fasta_result_table["five_prime_relative_position"] = five_prime_relative_position
         fasta_result_table.sort_values(by="five_prime_relative_position", inplace=True)
         fasta_result_table.reset_index(inplace=True, drop=True)
-        #fasta_result_table.to_csv("TEST_CRITERIA3.csv")
+        
         if report:
             print("5' relative positions for all remaining potential hosts:")
             print(fasta_result_table[["GENUS", "five_prime_relative_position"]])
@@ -156,9 +154,9 @@ class PhageHostFinder:
         
         if len(sub_section["GENUS"].unique().tolist()) == 1:
             if report:
-                print("Host is {}. Found using criteria #3".format(sub_section["GENUS"][0]))
-            return({"Query": fasta_result_table["Query"][0],
-                "Host": sub_section["GENUS"][0], 
+                print("Host is {}. Found using criteria #3".format(sub_section["GENUS"].iloc[0]))
+            return({"Query": fasta_result_table["Query"].iloc[0],
+                "Host": sub_section["GENUS"].iloc[0], 
                 "Level": 3})
         else:
             fasta_result_table = sub_section
@@ -167,7 +165,7 @@ class PhageHostFinder:
                 print(fasta_result_table[["GENUS", "five_prime_relative_position"]])
 
         #Criteria 4: Last common ancester (does not return a genus)
-        #print("Criteria 3: {}".format(time.time()-t1))
+        
         if report:
             print("\n**Criteria 4: Last common ancester (does not return a genus)**\n")
             print(fasta_result_table[["GENUS", "FAMILY", "TORDER"]])
@@ -175,21 +173,21 @@ class PhageHostFinder:
         if len(set(fasta_result_table["FAMILY"])) == 1:
             if report:
                 print("Family is common to all remaining potential hosts.")
-                print("Host is {}. Found using criteria #4".format(fasta_result_table["FAMILY"][0]))
-            return({"Query": fasta_result_table["Query"][0],
-                "Host": fasta_result_table["FAMILY"][0], 
+                print("Host is {}. Found using criteria #4".format(fasta_result_table["FAMILY"].iloc[0]))
+            return({"Query": fasta_result_table["Query"].iloc[0],
+                "Host": fasta_result_table["FAMILY"].iloc[0], 
                 "Level": 4})
         elif len(set(fasta_result_table["TORDER"])) == 1:
             if report:
                 print("Order is common to all remaining potential hosts.")
-                print("Host is {}. Found using criteria #4".format(fasta_result_table["TORDER"][0]))
-            return({"Query": fasta_result_table["Query"][0],
-                "Host": fasta_result_table["TORDER"][0], 
+                print("Host is {}. Found using criteria #4".format(fasta_result_table["TORDER"].iloc[0]))
+            return({"Query": fasta_result_table["Query"].iloc[0],
+                "Host": fasta_result_table["TORDER"].iloc[0], 
                 "Level": 4})
         else:
             if report:
                 print("Unable to find last common ancester.")
-            return({"Query": fasta_result_table["Query"][0],
+            return({"Query": fasta_result_table["Query"].iloc[0],
                 "Host": "UNKNOWN", 
                 "Level": 4})
 
@@ -200,6 +198,15 @@ class PhageHostFinder:
         elif tool == "fasta36":
             self._run_fasta_36(fasta_file)
         
+        if len(self._alignement_results) == 0:
+            return("No hits found. Sorry!")
+        
+        if self._spacer_table is None:
+            self._load_spacer_table()
+        
+        df =  self._alignement_results.set_index("SPACER_ID").merge(self._spacer_table, on="SPACER_ID", how="left")
+        self._alignement_results = df
+
         for table in self.alignement_results:
             hostIdentification = self._findHost(table, n_mismatch, report, table_to_file)
             print(hostIdentification)
