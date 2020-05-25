@@ -101,6 +101,10 @@ class PhageHostFinder:
         if len(set(fasta_result_table["GENUS"])) == 1:
             if report:
                 print("Host is {}. Found using criteria #1".format(fasta_result_table["GENUS"].iloc[0]))
+                print("Spacer(s) on which prediction is based:")
+                for i in range(len(fasta_result_table["SPACER"])):
+                    print("{}; organism: {}".format(fasta_result_table["SPACER"].iloc[i], fasta_result_table["ORGANISM_NAME"].iloc[i]))
+                
             return({"Query": fasta_result_table["Query"].iloc[0],
                 "Host": fasta_result_table["GENUS"].iloc[0],  
                 "Level": 1})
@@ -126,6 +130,10 @@ class PhageHostFinder:
         if most_commons_genus[0][1] != most_commons_genus[1][1]: # If count is not equal, we found host
             if report:
                 print("Host is {}. Found using criteria #2".format(most_commons_genus[0][0]))
+                print("Spacer(s) on which prediction is based:")
+                for i in range(len(fasta_result_table["SPACER"])):
+                    if fasta_result_table["GENUS"].iloc[i] == most_commons_genus[0][0]:
+                        print("{}; organism: {}".format(fasta_result_table["SPACER"].iloc[i], fasta_result_table["ORGANISM_NAME"].iloc[i]))
             return({"Query": fasta_result_table["Query"].iloc[0],
                 "Host": most_commons_genus[0][0], 
                 "Level": 2})
@@ -155,6 +163,9 @@ class PhageHostFinder:
         if len(sub_section["GENUS"].unique().tolist()) == 1:
             if report:
                 print("Host is {}. Found using criteria #3".format(sub_section["GENUS"].iloc[0]))
+                print("Spacer(s) on which prediction is based:")
+                for i in range(len(sub_section["SPACER"])):
+                    print("{}; organism: {}".format(sub_section["SPACER"].iloc[i], sub_section["ORGANISM_NAME"].iloc[i]))
             return({"Query": fasta_result_table["Query"].iloc[0],
                 "Host": sub_section["GENUS"].iloc[0], 
                 "Level": 3})
@@ -174,6 +185,9 @@ class PhageHostFinder:
             if report:
                 print("Family is common to all remaining potential hosts.")
                 print("Host is {}. Found using criteria #4".format(fasta_result_table["FAMILY"].iloc[0]))
+                print("Spacer(s) on which prediction is based:")
+                for i in range(len(fasta_result_table["SPACER"])):
+                    print("{}; organism: {}".format(fasta_result_table["SPACER"].iloc[i], fasta_result_table["ORGANISM_NAME"].iloc[i]))
             return({"Query": fasta_result_table["Query"].iloc[0],
                 "Host": fasta_result_table["FAMILY"].iloc[0], 
                 "Level": 4})
@@ -181,12 +195,18 @@ class PhageHostFinder:
             if report:
                 print("Order is common to all remaining potential hosts.")
                 print("Host is {}. Found using criteria #4".format(fasta_result_table["TORDER"].iloc[0]))
+                print("Spacer(s) on which prediction is based:")
+                for i in range(len(fasta_result_table["SPACER"])):
+                    print("{}; organism: {}".format(fasta_result_table["SPACER"].iloc[i], fasta_result_table["ORGANISM_NAME"].iloc[i]))
             return({"Query": fasta_result_table["Query"].iloc[0],
                 "Host": fasta_result_table["TORDER"].iloc[0], 
                 "Level": 4})
         else:
             if report:
                 print("Unable to find last common ancester.")
+                print("Spacer(s) on which prediction is based:")
+                for i in range(len(fasta_result_table["SPACER"])):
+                    print("{}; organism: {}".format(fasta_result_table["SPACER"].iloc[i], fasta_result_table["ORGANISM_NAME"].iloc[i]))
             return({"Query": fasta_result_table["Query"].iloc[0],
                 "Host": "UNKNOWN", 
                 "Level": 4})
