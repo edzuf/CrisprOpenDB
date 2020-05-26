@@ -120,7 +120,8 @@ class PhageHostFinder:
                 print("Host is {}. Found using criteria #1".format(fasta_result_table["GENUS"].iloc[0]))
                 print("Spacer(s) on which prediction is based:")
                 for i in range(len(fasta_result_table["SPACER"])):
-                    print("{}; organism: {}".format(fasta_result_table["SPACER"].iloc[i], fasta_result_table["ORGANISM_NAME"].iloc[i]))
+                    print("{}; organism: {}; start position on phage genome: {}; end position on phage genome: {}".format(fasta_result_table["SPACER"].iloc[i], 
+                    fasta_result_table["ORGANISM_NAME"].iloc[i], fasta_result_table["q_start"].iloc[i], fasta_result_table["q_end"].iloc[i]))
                 
             return({"Query": fasta_result_table["Query"].iloc[0],
                 "Host": fasta_result_table["GENUS"].iloc[0],  
@@ -150,7 +151,8 @@ class PhageHostFinder:
                 print("Spacer(s) on which prediction is based:")
                 for i in range(len(fasta_result_table["SPACER"])):
                     if fasta_result_table["GENUS"].iloc[i] == most_commons_genus[0][0]:
-                        print("{}; organism: {}".format(fasta_result_table["SPACER"].iloc[i], fasta_result_table["ORGANISM_NAME"].iloc[i]))
+                        print("{}; organism: {}; start position on phage genome: {}; end position on phage genome: {}".format(fasta_result_table["SPACER"].iloc[i],
+                        fasta_result_table["ORGANISM_NAME"].iloc[i], fasta_result_table["q_start"].iloc[i], fasta_result_table["q_end"].iloc[i]))
             return({"Query": fasta_result_table["Query"].iloc[0],
                 "Host": most_commons_genus[0][0], 
                 "Level": 2})
@@ -182,15 +184,17 @@ class PhageHostFinder:
                 print("Host is {}. Found using criteria #3".format(sub_section["GENUS"].iloc[0]))
                 print("Spacer(s) on which prediction is based:")
                 for i in range(len(sub_section["SPACER"])):
-                    print("{}; organism: {}".format(sub_section["SPACER"].iloc[i], sub_section["ORGANISM_NAME"].iloc[i]))
+                    print("{}; organism: {}; start position on phage genome: {}; end position on phage genome: {}".format(sub_section["SPACER"].iloc[i], 
+                    sub_section["ORGANISM_NAME"].iloc[i], sub_section["q_start"].iloc[i], sub_section["q_end"].iloc[i]))
             return({"Query": fasta_result_table["Query"].iloc[0],
                 "Host": sub_section["GENUS"].iloc[0], 
                 "Level": 3})
         else:
             fasta_result_table = sub_section
             if report:
-                print("\n Potential hosts with the same relative position (most in 5'):")
-                print(fasta_result_table[["GENUS", "five_prime_relative_position"]])
+                print("Potential hosts with the same relative position (most in 5'): ")
+                for genus in set(fasta_result_table["GENUS"]):
+                    print(genus)
 
         #Criteria 4: Last common ancester (does not return a genus)
         
@@ -204,7 +208,8 @@ class PhageHostFinder:
                 print("Host is {}. Found using criteria #4".format(fasta_result_table["FAMILY"].iloc[0]))
                 print("Spacer(s) on which prediction is based:")
                 for i in range(len(fasta_result_table["SPACER"])):
-                    print("{}; organism: {}".format(fasta_result_table["SPACER"].iloc[i], fasta_result_table["ORGANISM_NAME"].iloc[i]))
+                    print("{}; organism: {}, start position on phage genome: {}; end position on phage genome: {}".format(fasta_result_table["SPACER"].iloc[i], 
+                    fasta_result_table["ORGANISM_NAME"].iloc[i], fasta_result_table["q_start"].iloc[i], fasta_result_table["q_end"].iloc[i]))
             return({"Query": fasta_result_table["Query"].iloc[0],
                 "Host": fasta_result_table["FAMILY"].iloc[0], 
                 "Level": 4})
@@ -214,7 +219,8 @@ class PhageHostFinder:
                 print("Host is {}. Found using criteria #4".format(fasta_result_table["TORDER"].iloc[0]))
                 print("Spacer(s) on which prediction is based:")
                 for i in range(len(fasta_result_table["SPACER"])):
-                    print("{}; organism: {}".format(fasta_result_table["SPACER"].iloc[i], fasta_result_table["ORGANISM_NAME"].iloc[i]))
+                    print("{}; organism: {}, start position on phage genome: {}; end position on phage genome: {}".format(fasta_result_table["SPACER"].iloc[i], 
+                    fasta_result_table["ORGANISM_NAME"].iloc[i], fasta_result_table["q_start"].iloc[i], fasta_result_table["q_end"].iloc[i]))
             return({"Query": fasta_result_table["Query"].iloc[0],
                 "Host": fasta_result_table["TORDER"].iloc[0], 
                 "Level": 4})
@@ -223,7 +229,8 @@ class PhageHostFinder:
                 print("Unable to find last common ancester.")
                 print("Spacer(s) on which prediction is based:")
                 for i in range(len(fasta_result_table["SPACER"])):
-                    print("{}; organism: {}".format(fasta_result_table["SPACER"].iloc[i], fasta_result_table["ORGANISM_NAME"].iloc[i]))
+                    print("{}; organism: {}, start position on phage genome: {}; end position on phage genome: {}".format(fasta_result_table["SPACER"].iloc[i], 
+                    fasta_result_table["ORGANISM_NAME"].iloc[i], fasta_result_table["q_start"].iloc[i], fasta_result_table["q_end"].iloc[i]))
             return({"Query": fasta_result_table["Query"].iloc[0],
                 "Host": "UNKNOWN", 
                 "Level": 4})
@@ -249,7 +256,7 @@ class PhageHostFinder:
         
         for table in self.alignement_results:
             hostIdentification = self._findHost(table, n_mismatch, report, table_to_file)
-            print(hostIdentification)
+            print("\n{}".format(hostIdentification))
 
         return(hostIdentification)
 
