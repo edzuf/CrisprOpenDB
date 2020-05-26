@@ -12,7 +12,7 @@ class PhageHostFinder:
         self._blast_database = "SpacersDB"
         self._fasta_database = "SpacersDB.fasta"
         self._alignement_results = None
-        self._spacer_table= None
+        self._connection = None
 
 
     def _run_fasta_36(self, fasta_file):
@@ -55,14 +55,14 @@ class PhageHostFinder:
             sys.exit()
         self._alignement_results = blastn_result_table
     
-    def _load_spacer_table(self):
-        t1 = time.time()
-        db_explorer = CrisprOpenDB.CrisprOpenDB(os.path.join("SpacersDB", "CrisprOpenDB.sqlite"))
-        df = pd.read_sql_query("select ST.SPACER_ID, ST.GENEBANK_ID, ORG.ORGANISM_NAME, ORG.SPECIES, ORG.GENUS, ORG.FAMILY, ORG.TORDER, ST.SPACER, ST.SPACER_LENGTH, SAL.COUNT_SPACER, ST.POSITION_INSIDE_LOCUS  \
-            from ORGANISM ORG, SPACER_TABLE ST, SPACER_ARRAY_LENGTH SAL \
-            where ST.GENEBANK_ID=ORG.GENEBANK_ID and ST.GENEBANK_ID=SAL.GENEBANK_ID and ST.NUMERO_LOCUS=SAL.NUMERO_LOCUS", db_explorer._connection)
-        df.set_index("SPACER_ID", inplace=True)
-        self._spacer_table = df
+    # def _load_spacer_table(self):
+    #     t1 = time.time()
+    #     db_explorer = CrisprOpenDB.CrisprOpenDB(os.path.join("SpacersDB", "CrisprOpenDB.sqlite"))
+    #     df = pd.read_sql_query("select ST.SPACER_ID, ST.GENEBANK_ID, ORG.ORGANISM_NAME, ORG.SPECIES, ORG.GENUS, ORG.FAMILY, ORG.TORDER, ST.SPACER, ST.SPACER_LENGTH, SAL.COUNT_SPACER, ST.POSITION_INSIDE_LOCUS  \
+    #         from ORGANISM ORG, SPACER_TABLE ST, SPACER_ARRAY_LENGTH SAL \
+    #         where ST.GENEBANK_ID=ORG.GENEBANK_ID and ST.GENEBANK_ID=SAL.GENEBANK_ID and ST.NUMERO_LOCUS=SAL.NUMERO_LOCUS", db_explorer._connection)
+    #     df.set_index("SPACER_ID", inplace=True)
+    #     self._spacer_table = df
 
 
     @property
@@ -72,6 +72,23 @@ class PhageHostFinder:
           
     def _findHost(self, alignement_table, n_mismatch, report, table_to_file):
         fasta_result_table = alignement_table.copy()
+
+        #1. Select spacers id from the fasta result table
+        spacers_id_from_blast = np.array(fasta_result_table.index)
+
+        #2. Extract data from DB
+        bd_df = pd.read_sql_query(sql="select ST.SPACER_ID, ST.GENEBANK_ID, ORG.ORGANISM_NAME, ORG.SPECIES, ORG.GENUS, ORG.FAMILY, \
+            ORG.TORDER, ST.SPACER, ST.SPACER_LENGTH, SAL.COUNT_SPACER, ST.POSITION_INSIDE_LOCUS \
+            from ORGANISM ORG, SPACER_TABLE ST, SPACER_ARRAY_LENGTH SAL \
+            where ST.GENEBANK_ID=ORG.GENEBANK_ID \
+            and ST.GENEBANK_ID=SAL.GENEBANK_ID \
+            and ST.NUMERO_LOCUS=SAL.NUMERO_LOCUS \
+            and ST.SPACER_ID in ({seq})".format(seq=','.join(['?']*len(spacers_id_from_blast))), 
+            params=spacers_id_from_blast, 
+            con=self._connection._connection)
+        
+        #3. Merge.
+        fasta_result_table = fasta_result_table.merge(bd_df, on="SPACER_ID", how="left")
 
         print("\n====================")
         print("Query: {}".format(fasta_result_table["Query"].iloc[0]))
@@ -221,12 +238,15 @@ class PhageHostFinder:
         if len(self._alignement_results) == 0:
             return("No hits found. Sorry!")
         
-        if self._spacer_table is None:
-            self._load_spacer_table()
+        # if self._spacer_table is None:
+        #     self._load_spacer_table()
         
-        df =  self._alignement_results.set_index("SPACER_ID").merge(self._spacer_table, on="SPACER_ID", how="left")
+        df =  self._alignement_results.set_index("SPACER_ID") #.merge(self._spacer_table, on="SPACER_ID", how="left")
         self._alignement_results = df
 
+        if self._connection is None:
+            self._connection = CrisprOpenDB.CrisprOpenDB(os.path.join("SpacersDB", "CrisprOpenDB.sqlite"))
+        
         for table in self.alignement_results:
             hostIdentification = self._findHost(table, n_mismatch, report, table_to_file)
             print(hostIdentification)
