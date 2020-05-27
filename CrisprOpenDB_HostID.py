@@ -260,6 +260,8 @@ if __name__ == "__main__":
     parser.add_argument("-a", "--aligner", help="Alignement tool to use. blast or fasta36", type=str, default="blast")
     parser.add_argument("-r", "--report", help="Show report of host identification.", action="store_true")
     parser.add_argument("-t", "--table", help="Show full result table in separate csv file.", action="store_true")
+    parser.add_argument("-b", "--blastdb", help="Blast database to use for alignment.", type=str, default=None)
+    parser.add_argument("-f", "--fastadb", help="Fasta database to use for alignment.", type=str, default=None)
     args = parser.parse_args()
 
     if args.mismatch < 0 or args.mismatch > 5:
@@ -270,7 +272,16 @@ if __name__ == "__main__":
         parser.print_help()
         exit()
 
-    phf = PhageHostFinder()
+    if (args.blastdb != None and args.fastadb != None):
+        print("Please use only one of the following options:\n-b, --blastdb\n-f, --fastadb")   
+        exit()
+    elif args.blastdb:
+        phf = PhageHostFinder(args.blastdb, None)
+    elif args.fastadb:
+        phf = PhageHostFinder(None, args.fastadb)
+    else:
+        phf = PhageHostFinder()
+
     results = phf.identify(args.input, args.mismatch, args.aligner, args.report, args.table)
 
     #print(results)
