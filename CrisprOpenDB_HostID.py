@@ -8,14 +8,17 @@ import argparse
 from SpacersDB import CrisprOpenDB
 
 class PhageHostFinder:
-    def __init__(self):
-        self._blast_database = "SpacersDB"
-        self._fasta_database = "SpacersDB.fasta"
+    def __init__(self, blast_db=os.path.join("SpacersDB", "SpacersDB"), fasta_db=os.path.join("SpacersDB", "SpacersDB.fasta")):
+        self._blast_database = blast_db
+        self._fasta_database = fasta_db
         self._alignement_results = None
         self._connection = None
 
 
     def _run_fasta_36(self, fasta_file):
+        if self._fasta_database is None: #TODO: add check if file exists
+            print("Please specify a fasta database to perform analysis using fasta36.")
+            sys.exit()
         command = "fasta36 -m 8 {} {}".format(fasta_file, self._fasta_database)
         #print("Running command... {}".format(command))
         command = shlex.split(command)
@@ -35,6 +38,9 @@ class PhageHostFinder:
         self._alignement_results = fasta_result_table
     
     def _run_blastn(self, fasta_file):
+        if self._blast_database is None: #TODO: add check if file exists
+            print("Please specify a formated BLAST database to perform analysis using BLAST")
+            sys.exit()
         command = "blastn -task 'blastn' -query {} -db {} -outfmt 6 ".format(fasta_file, self._blast_database)
         #print("Running command... {}".format(command))
         command = shlex.split(command)
@@ -47,23 +53,13 @@ class PhageHostFinder:
 
         blastn_out = io.StringIO(p.decode("utf-8"))
         blastn_out.seek(0)
-        #blastn_result_table = pd.read_table(blastn_out, names=columns)
+        
         blastn_result_table = pd.read_csv(blastn_out, names=columns, sep="\t")
 
         if len(blastn_result_table) == 0:
             print("No hits found. Sorry!")
             sys.exit()
         self._alignement_results = blastn_result_table
-    
-    # def _load_spacer_table(self):
-    #     t1 = time.time()
-    #     db_explorer = CrisprOpenDB.CrisprOpenDB(os.path.join("SpacersDB", "CrisprOpenDB.sqlite"))
-    #     df = pd.read_sql_query("select ST.SPACER_ID, ST.GENEBANK_ID, ORG.ORGANISM_NAME, ORG.SPECIES, ORG.GENUS, ORG.FAMILY, ORG.TORDER, ST.SPACER, ST.SPACER_LENGTH, SAL.COUNT_SPACER, ST.POSITION_INSIDE_LOCUS  \
-    #         from ORGANISM ORG, SPACER_TABLE ST, SPACER_ARRAY_LENGTH SAL \
-    #         where ST.GENEBANK_ID=ORG.GENEBANK_ID and ST.GENEBANK_ID=SAL.GENEBANK_ID and ST.NUMERO_LOCUS=SAL.NUMERO_LOCUS", db_explorer._connection)
-    #     df.set_index("SPACER_ID", inplace=True)
-    #     self._spacer_table = df
-
 
     @property
     def alignement_results(self):
@@ -106,8 +102,6 @@ class PhageHostFinder:
             if report:
                 print("Empty result table. Found no match between query and spacer database that tolerates {} mismatch(es).".format(n_mismatch))
             return("No hits found. Sorry!")
-
-        
 
         fasta_result_table["mean_position"] = np.array((fasta_result_table["q_start"] + fasta_result_table["q_end"]) / 2, dtype=int)
 
@@ -245,10 +239,7 @@ class PhageHostFinder:
         if len(self._alignement_results) == 0:
             return("No hits found. Sorry!")
         
-        # if self._spacer_table is None:
-        #     self._load_spacer_table()
-        
-        df =  self._alignement_results.set_index("SPACER_ID") #.merge(self._spacer_table, on="SPACER_ID", how="left")
+        df =  self._alignement_results.set_index("SPACER_ID")
         self._alignement_results = df
 
         if self._connection is None:
