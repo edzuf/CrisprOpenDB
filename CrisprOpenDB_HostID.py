@@ -19,6 +19,9 @@ class PhageHostFinder:
         if self._fasta_database is None: #TODO: add check if file exists
             print("Please specify a fasta database to perform analysis using fasta36.")
             sys.exit()
+        elif not os.path.exists(self._fasta_database):
+            print("Fasta database not found.")
+            sys.exit()
         command = "fasta36 -m 8 {} {}".format(fasta_file, self._fasta_database)
         #print("Running command... {}".format(command))
         command = shlex.split(command)
@@ -41,6 +44,21 @@ class PhageHostFinder:
         if self._blast_database is None: #TODO: add check if file exists
             print("Please specify a formated BLAST database to perform analysis using BLAST")
             sys.exit()
+
+        list_file = self._blast_database.rsplit("/", 1)
+        if len(list_file) == 1:
+            directory = "."
+        else:
+            directory = list_file[0]
+        f_exists = False
+        for f in os.listdir(directory):
+            if f.startswith(list_file[-1]):
+                f_exists = True
+                break
+        if not f_exists:
+            print("BLAST database not found.")
+            sys.exit()
+
         command = "blastn -task 'blastn' -query {} -db {} -outfmt 6 ".format(fasta_file, self._blast_database)
         #print("Running command... {}".format(command))
         command = shlex.split(command)
