@@ -2,7 +2,7 @@
 
 ### Prerequisites
 
-Before using this program, go to the `SpacersDB/` directory and download the spacer database (http://crispr.genome.ulaval.ca/dash/SpacersDB.fasta) and the sqlite file (http://crispr.genome.ulaval.ca/dash/CrisprOpenDB.sqlite). 
+Before using this program, download the spacer database and the sqlite file (http://crispr.genome.ulaval.ca/dash/PhageHostIdentifier_DBfiles.zip) and unzip the files in the `SpacersDB/` directory. 
 
 Once these steps are complete, you must go back to the previous directory to run the program.
 
