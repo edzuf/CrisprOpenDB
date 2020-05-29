@@ -2,7 +2,7 @@
 
 ### Prerequisites
 
-Before using this program, download the spacer database and the sqlite file (http://crispr.genome.ulaval.ca/dash/PhageHostIdentifier_DBfiles.zip) and unzip the files in the `SpacersDB/` directory. 
+Before using this program, download the spacer database and the sqlite file (http://crispr.genome.ulaval.ca/dash/PhageHostIdentifier_DBfiles.zip) and unzip the files in the `SpacersDB/` directory. Notice that files are quite large. The download size is about 800Mo for the compressed file. Once unzipped, file sizes will be approximately 600Mo for the spacer database and 3.8Go for the sqlite file.
 
 Once these steps are complete, you must go back to the previous directory to run the program.
 
