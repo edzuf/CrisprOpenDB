@@ -5,10 +5,10 @@ from uuid import uuid4
 import pandas as pd
 import numpy as np
 import argparse
-from SpacersDB import CrisprOpenDB
+from CrisprOpenDB.SpacersDB import CrisprOpenDB
 
 class PhageHostFinder:
-    def __init__(self, blast_db=os.path.join("SpacersDB", "SpacersDB"), fasta_db=os.path.join("SpacersDB", "SpacersDB.fasta")):
+    def __init__(self, blast_db=os.path.join("CrisprOpenDB", "SpacersDB", "SpacersDB"), fasta_db=os.path.join("CrisprOpenDB", "SpacersDB", "SpacersDB.fasta")):
         self._blast_database = blast_db
         self._fasta_database = fasta_db
         self._alignement_results = None
@@ -84,7 +84,7 @@ class PhageHostFinder:
         for query in set(np.array(self._alignement_results["Query"])):
            yield self._alignement_results[self._alignement_results["Query"] == query]
           
-    def _findHost(self, alignement_table, n_mismatch, report, table_to_file):
+    def _findHost(self, alignement_table, n_mismatch, report, table_to_file, keep_unknown):
         fasta_result_table = alignement_table.copy()
 
         #1. Select spacers id from the fasta result table
@@ -108,6 +108,9 @@ class PhageHostFinder:
         print("Query: {}".format(fasta_result_table["Query"].iloc[0]))
         print("====================")
 
+        if not keep_unknown:
+            fasta_result_table = fasta_result_table[fasta_result_table["GENUS"] != "Unknown"]
+    
         fasta_result_table.loc[:,"true_num_mismatch"] = (fasta_result_table.loc[:,"SPACER_LENGTH"] - fasta_result_table.loc[:,"alignement_length"]) + fasta_result_table.loc[:,"mismatch"]
 
         if table_to_file:
@@ -248,7 +251,7 @@ class PhageHostFinder:
                 "Level": 4})
 
 
-    def identify(self, fasta_file, n_mismatch, tool="blast", report=False, table_to_file=False):
+    def identify(self, fasta_file, n_mismatch, tool="blast", report=False, table_to_file=False, keep_unknown=False):
         if tool == "blast":
             self._run_blastn(fasta_file)
         elif tool == "fasta36":
@@ -261,47 +264,13 @@ class PhageHostFinder:
         self._alignement_results = df
 
         if self._connection is None:
-            self._connection = CrisprOpenDB.CrisprOpenDB(os.path.join("SpacersDB", "CrisprOpenDB.sqlite"))
+            self._connection = CrisprOpenDB.CrisprOpenDB(os.path.join("CrisprOpenDB", "SpacersDB", "CrisprOpenDB.sqlite"))
         
         for table in self.alignement_results:
-            hostIdentification = self._findHost(table, n_mismatch, report, table_to_file)
+            hostIdentification = self._findHost(table, n_mismatch, report, table_to_file, keep_unknown)
             print("\n{}".format(hostIdentification))
 
         return(hostIdentification)
 
-
-if __name__ == "__main__":
-
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-i", "--input", help="Input file in FASTA format.", type=str, required=True)
-    parser.add_argument("-m", "--mismatch", help="Number of mismatches. Value must be between 0 and 5. If not specified, default value is 1.", type=int, default=1)
-    parser.add_argument("-a", "--aligner", help="Alignement tool to use. blast or fasta36", type=str, default="blast")
-    parser.add_argument("-r", "--report", help="Show report of host identification.", action="store_true")
-    parser.add_argument("-t", "--table", help="Show full result table in separate csv file.", action="store_true")
-    parser.add_argument("-b", "--blastdb", help="Blast database to use for alignment.", type=str, default=None)
-    parser.add_argument("-f", "--fastadb", help="Fasta database to use for alignment.", type=str, default=None)
-    args = parser.parse_args()
-
-    if args.mismatch < 0 or args.mismatch > 5:
-        parser.print_help()
-        exit()
-    
-    if args.aligner not in ["blast", "fasta36"]:
-        parser.print_help()
-        exit()
-
-    if (args.blastdb != None and args.fastadb != None):
-        print("Please use only one of the following options:\n-b, --blastdb\n-f, --fastadb")   
-        exit()
-    elif args.blastdb:
-        phf = PhageHostFinder(args.blastdb, None)
-    elif args.fastadb:
-        phf = PhageHostFinder(None, args.fastadb)
-    else:
-        phf = PhageHostFinder()
-
-    results = phf.identify(args.input, args.mismatch, args.aligner, args.report, args.table)
-
-    #print(results)
 
 
