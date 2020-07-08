@@ -15,14 +15,14 @@ class PhageHostFinder:
         self._connection = None
 
 
-    def _run_fasta_36(self, fasta_file):
+    def _run_fasta_36(self, fasta_file, num_threads):
         if self._fasta_database is None: #TODO: add check if file exists
             print("Please specify a fasta database to perform analysis using fasta36.")
             sys.exit()
         elif not os.path.exists(self._fasta_database):
             print("Fasta database not found.")
             sys.exit()
-        command = "fasta36 -m 8 {} {}".format(fasta_file, self._fasta_database)
+        command = "fasta36 -T {} -m 8 {} {}".format(num_threads, fasta_file, self._fasta_database)
         #print("Running command... {}".format(command))
         command = shlex.split(command)
         p = subprocess.Popen(command, stdout=subprocess.PIPE)
@@ -40,7 +40,7 @@ class PhageHostFinder:
             sys.exit()
         self._alignement_results = fasta_result_table
     
-    def _run_blastn(self, fasta_file):
+    def _run_blastn(self, fasta_file, num_threads):
         if self._blast_database is None: #TODO: add check if file exists
             print("Please specify a formated BLAST database to perform analysis using BLAST")
             sys.exit()
@@ -59,7 +59,7 @@ class PhageHostFinder:
             print("BLAST database not found.")
             sys.exit()
 
-        command = "blastn -task 'blastn' -query {} -db {} -outfmt 6 ".format(fasta_file, self._blast_database)
+        command = "blastn -task 'blastn' -query {} -db {} -num_threads {} -outfmt 6 ".format(fasta_file, self._blast_database, num_threads)
         #print("Running command... {}".format(command))
         command = shlex.split(command)
         p = subprocess.Popen(command, stdout=subprocess.PIPE)
@@ -251,11 +251,11 @@ class PhageHostFinder:
                 "Level": 4})
 
 
-    def identify(self, fasta_file, n_mismatch, tool="blast", report=False, table_to_file=False, keep_unknown=False):
+    def identify(self, fasta_file, n_mismatch, tool="blast", report=False, table_to_file=False, keep_unknown=False, num_threads=1):
         if tool == "blast":
-            self._run_blastn(fasta_file)
+            self._run_blastn(fasta_file, num_threads)
         elif tool == "fasta36":
-            self._run_fasta_36(fasta_file)
+            self._run_fasta_36(fasta_file, num_threads)
         
         if len(self._alignement_results) == 0:
             return("No hits found. Sorry!")

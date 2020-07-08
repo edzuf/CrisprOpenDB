@@ -12,6 +12,7 @@ if __name__ == "__main__":
     parser.add_argument("-b", "--blastdb", help="Blast database to use for alignment.", type=str, default=None)
     parser.add_argument("-f", "--fastadb", help="Fasta database to use for alignment.", type=str, default=None)
     parser.add_argument("-u", "--unknown", help="Keep spacers with unknown genus for prediction. False if not specified.", action="store_true")
+    parser.add_argument("-n", "--num_threads", help="Number of threads (>=1) to use for the alignment. Default is 1.", type=int, default=1)
     args = parser.parse_args()
 
     if args.mismatch < 0 or args.mismatch > 5:
@@ -25,6 +26,10 @@ if __name__ == "__main__":
     if args.unknown:
         print("**Warning**\nKeeping spacers with unknown genus (option -u, --unknown) can lead to incorrect prediction. If you choose to use this option, we stongly recommend that you use the report of host identification to keep track of the identification process and avoid any bias (option -r, --report).")
 
+    if args.num_threads < 1:
+        parser.print_help()
+        exit()
+
     if (args.blastdb != None and args.fastadb != None):
         print("Please use only one of the following options:\n-b, --blastdb\n-f, --fastadb")   
         exit()
@@ -35,4 +40,4 @@ if __name__ == "__main__":
     else:
         phf = PhageHostFinder()
 
-    results = phf.identify(args.input, args.mismatch, args.aligner, args.report, args.table, args.unknown)
+    results = phf.identify(args.input, args.mismatch, args.aligner, args.report, args.table, args.unknown, args.num_threads)
