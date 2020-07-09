@@ -5,7 +5,7 @@ if __name__ == "__main__":
     
     parser = argparse.ArgumentParser()
     parser.add_argument("-i", "--input", help="Input file in FASTA format.", type=str, required=True)
-    parser.add_argument("-m", "--mismatch", help="Number of mismatches. Value must be between 0 and 5. If not specified, default value is 1.", type=int, default=1)
+    parser.add_argument("-m", "--mismatch", help="Number of mismatches. Value must be between 0 and 5. If not specified, default value is 2.", type=int, default=2)
     parser.add_argument("-a", "--aligner", help="Alignement tool to use. blast or fasta36", type=str, default="blast")
     parser.add_argument("-r", "--report", help="Show report of host identification.", action="store_true")
     parser.add_argument("-t", "--table", help="Show full result table in separate csv file.", action="store_true")
@@ -39,5 +39,5 @@ if __name__ == "__main__":
         phf = PhageHostFinder(None, args.fastadb)
     else:
         phf = PhageHostFinder()
-
+    
     results = phf.identify(args.input, args.mismatch, args.aligner, args.report, args.table, args.unknown, args.num_threads)
