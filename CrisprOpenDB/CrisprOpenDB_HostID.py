@@ -1,4 +1,4 @@
-import os, sys, shlex, subprocess, io, base64, time, tempfile
+import os, sys, shlex, subprocess, io, base64, time
 from Bio import SeqIO, Seq
 from collections import Counter
 from uuid import uuid4
@@ -41,7 +41,6 @@ class PhageHostFinder:
         self._alignement_results = fasta_result_table
     
     def _run_blastn(self, fasta_file, num_threads):
-        t1_blast = time.time()
         if self._blast_database is None: #TODO: add check if file exists
             print("Please specify a formated BLAST database to perform analysis using BLAST")
             sys.exit()
@@ -59,15 +58,12 @@ class PhageHostFinder:
         if not f_exists:
             print("BLAST database not found.")
             sys.exit()
-        #print("blast about to run")
+        
         command = "blastn -task 'blastn' -query {} -db {} -num_threads {} -outfmt 6".format(fasta_file, self._blast_database, num_threads)
-        print("Running command... {}".format(command))
+        # print("Running command... {}".format(command))
         command = shlex.split(command)
         p = subprocess.Popen(command, stdout=subprocess.PIPE)
-        #p.wait()
-        #p = p.stdout.read()
         p, err = p.communicate()
-        #print("blast done")
         columns = ["Query", "SPACER_ID", "identity", "alignement_length", 
         "mismatch", "gap", "q_start", "q_end", "s_start", "s_end", "e_value", "score"]
 
@@ -78,9 +74,6 @@ class PhageHostFinder:
 
         blastn_out.close()
 
-        #print("blast result table created")
-        t2_blast = time.time()
-        print("Blast running time: {}".format(t2_blast-t1_blast))
         if len(blastn_result_table) == 0:
             print("No hits found. Sorry!")
             sys.exit()
@@ -96,7 +89,7 @@ class PhageHostFinder:
 
         #1. Select spacers id from the fasta result table
         spacers_id_from_blast = np.array(fasta_result_table.index)
-        chunks = [spacers_id_from_blast[x:x+500] for x in range(0, len(spacers_id_from_blast), 500)]
+        chunks = [spacers_id_from_blast[x:x+900] for x in range(0, len(spacers_id_from_blast), 900)]
 
         bd_df = pd.DataFrame()
 
