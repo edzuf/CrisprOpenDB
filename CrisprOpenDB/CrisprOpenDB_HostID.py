@@ -1,4 +1,4 @@
-import os, sys, shlex, subprocess, io, base64, time
+import os, sys, shlex, subprocess, io, base64, time, tempfile
 from Bio import SeqIO, Seq
 from collections import Counter
 from uuid import uuid4
@@ -41,6 +41,7 @@ class PhageHostFinder:
         self._alignement_results = fasta_result_table
     
     def _run_blastn(self, fasta_file, num_threads):
+        t1_blast = time.time()
         if self._blast_database is None: #TODO: add check if file exists
             print("Please specify a formated BLAST database to perform analysis using BLAST")
             sys.exit()
@@ -58,14 +59,15 @@ class PhageHostFinder:
         if not f_exists:
             print("BLAST database not found.")
             sys.exit()
-
-        command = "blastn -task 'blastn' -query {} -db {} -num_threads {} -outfmt 6 ".format(fasta_file, self._blast_database, num_threads)
-        #print("Running command... {}".format(command))
+        #print("blast about to run")
+        command = "blastn -task 'blastn' -query {} -db {} -num_threads {} -outfmt 6".format(fasta_file, self._blast_database, num_threads)
+        print("Running command... {}".format(command))
         command = shlex.split(command)
         p = subprocess.Popen(command, stdout=subprocess.PIPE)
-        p.wait()
-        p = p.stdout.read()
-
+        #p.wait()
+        #p = p.stdout.read()
+        p, err = p.communicate()
+        #print("blast done")
         columns = ["Query", "SPACER_ID", "identity", "alignement_length", 
         "mismatch", "gap", "q_start", "q_end", "s_start", "s_end", "e_value", "score"]
 
@@ -74,6 +76,11 @@ class PhageHostFinder:
         
         blastn_result_table = pd.read_csv(blastn_out, names=columns, sep="\t")
 
+        blastn_out.close()
+
+        #print("blast result table created")
+        t2_blast = time.time()
+        print("Blast running time: {}".format(t2_blast-t1_blast))
         if len(blastn_result_table) == 0:
             print("No hits found. Sorry!")
             sys.exit()
@@ -89,17 +96,25 @@ class PhageHostFinder:
 
         #1. Select spacers id from the fasta result table
         spacers_id_from_blast = np.array(fasta_result_table.index)
+        chunks = [spacers_id_from_blast[x:x+500] for x in range(0, len(spacers_id_from_blast), 500)]
+
+        bd_df = pd.DataFrame()
 
         #2. Extract data from DB
-        bd_df = pd.read_sql_query(sql="select ST.SPACER_ID, ST.GENEBANK_ID, ORG.ORGANISM_NAME, ORG.SPECIES, ORG.GENUS, ORG.FAMILY, \
-            ORG.TORDER, ST.SPACER, ST.SPACER_LENGTH, SAL.COUNT_SPACER, ST.POSITION_INSIDE_LOCUS \
-            from ORGANISM ORG, SPACER_TABLE ST, SPACER_ARRAY_LENGTH SAL \
-            where ST.GENEBANK_ID=ORG.GENEBANK_ID \
-            and ST.GENEBANK_ID=SAL.GENEBANK_ID \
-            and ST.NUMERO_LOCUS=SAL.NUMERO_LOCUS \
-            and ST.SPACER_ID in ({seq})".format(seq=','.join(['?']*len(spacers_id_from_blast))), 
-            params=spacers_id_from_blast, 
-            con=self._connection._connection)
+        for element in chunks:
+            temp_df = pd.read_sql_query(sql="select ST.SPACER_ID, ST.GENEBANK_ID, ORG.ORGANISM_NAME, ORG.SPECIES, ORG.GENUS, ORG.FAMILY, \
+                ORG.TORDER, ST.SPACER, ST.SPACER_LENGTH, SAL.COUNT_SPACER, ST.POSITION_INSIDE_LOCUS \
+                from ORGANISM ORG, SPACER_TABLE ST, SPACER_ARRAY_LENGTH SAL \
+                where ST.GENEBANK_ID=ORG.GENEBANK_ID \
+                and ST.GENEBANK_ID=SAL.GENEBANK_ID \
+                and ST.NUMERO_LOCUS=SAL.NUMERO_LOCUS \
+                and ST.SPACER_ID in ({seq})".format(seq=','.join(['?']*len(element))), 
+                params=element, 
+                con=self._connection._connection)
+            if bd_df.empty:
+                bd_df=temp_df
+            else:
+                bd_df=pd.concat([bd_df, temp_df])
         
         #3. Merge.
         fasta_result_table = fasta_result_table.merge(bd_df, on="SPACER_ID", how="left")

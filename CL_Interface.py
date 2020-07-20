@@ -1,5 +1,5 @@
 from CrisprOpenDB.CrisprOpenDB_HostID import PhageHostFinder
-import argparse
+import argparse, time
 
 if __name__ == "__main__":
     
@@ -34,10 +34,14 @@ if __name__ == "__main__":
         print("Please use only one of the following options:\n-b, --blastdb\n-f, --fastadb")   
         exit()
     elif args.blastdb:
+        t1 = time.time()
         phf = PhageHostFinder(args.blastdb, None)
     elif args.fastadb:
+        t1=time.time()
         phf = PhageHostFinder(None, args.fastadb)
     else:
+        t1=time.time()
         phf = PhageHostFinder()
-    
     results = phf.identify(args.input, args.mismatch, args.aligner, args.report, args.table, args.unknown, args.num_threads)
+    t2 = time.time()
+    print("Total time: {}".format(t2-t1))
