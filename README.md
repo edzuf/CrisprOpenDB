@@ -15,7 +15,7 @@ python CL_Interface.py -i Salmonella_161.fasta -m 2
 ```
 ### Test
 
-We provide test genomes for each level of prediction in the `TestGenomes/` directory. These will allow you to make sure the tool has been properly set up before moving on to your personal analyses.
+We provide test genomes for each level of prediction in the `TestGenomes/` directory. These will allow you to make sure the tool has been properly set up before moving on with your personal analyses.
 The commands you should use to perform the tests as well as the expected results are shown down below.
 
 Level 1 prediction:
