@@ -6,6 +6,10 @@ Before using this program, download the spacer database and the sqlite file (htt
 
 Once these steps are complete, you must go back to the initial directory to run the program.
 
+We recommend the use of a virtual environment to run the tool. You can set up a conda environment using the `conda_env.txt` file in the initial directory and the following command:
+```python
+conda create --name CrisprOpenDB_env --file conda_env.txt
+```
 ### Running
 
 To run the program, you must launch the `CL_Interface.py` file in the working directory.
