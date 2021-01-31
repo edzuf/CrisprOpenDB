@@ -2,14 +2,20 @@
 
 ### Prerequisites
 
-Before using this program, download the spacer database and the sqlite file (http://crispr.genome.ulaval.ca/dash/PhageHostIdentifier_DBfiles.zip) and unzip the files in the `CrisprOpenDB/SpacersDB/` directory. Note that files are quite large. The download size is about 800Mo for the compressed file. Once unzipped, file sizes will be approximately 600Mo for the spacer database and 3.8Go for the sqlite file.
+First, download or clone this repository. The easiest way is using `git clone https://github.com/plpla/CrisprOpenDB.git`.
 
-Once these steps are complete, you must go back to the initial directory to run the program.
-
-We recommend the use of a virtual environment to run the tool. You can set up a conda environment using the `conda_env.txt` file in the initial directory and the following command:
+Next, we recommend to create a virtual environment to run the tool. You can set up a conda environment using the `conda_env.txt` file in the initial directory and the following command:
 ```python
 conda create --name CrisprOpenDB_env --file conda_env.txt
 ```
+
+Don't forget to activate the environment to use it: `conda activate CrisprOpenDB_env`.
+You can now install the tool: `python setup.py install`.
+
+To use this program, you need to download the spacer database and the sqlite file (http://crispr.genome.ulaval.ca/dash/PhageHostIdentifier_DBfiles.zip) and unzip the files in the `CrisprOpenDB/SpacersDB/` directory. Note that files are quite large. The download size is about 800Mo for the compressed file. Once unzipped, file sizes will be approximately 600Mo for the spacer database and 3.8Go for the sqlite file. If you plan on using Blast to run the program, you need to build the blast database. Instructions for this optional step are at the end of this README file.
+
+Once these steps are complete, don't forget to go back to the initial directory to run the program. You can now try your installation with one of our test genome, as explained below.
+
 ### Running
 
 To run the program, you must launch the `CL_Interface.py` file in the working directory.
