@@ -6,7 +6,7 @@ First, download or clone this repository. The easiest way is using `git clone ht
 
 Next, we recommend to create a virtual environment to run the tool. You can set up a conda environment using the `conda_env.txt` file in the initial directory and the following command:
 ```python
-conda create --name CrisprOpenDB_env --file conda_env.txt
+conda create -c conda-forge --name CrisprOpenDB_env --file conda_env.txt
 ```
 
 Don't forget to activate the environment to use it: `conda activate CrisprOpenDB_env`.
