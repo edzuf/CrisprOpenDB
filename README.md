@@ -36,21 +36,21 @@ python CL_Interface.py -i TestGenomes/KJ489400.fasta
 
 Level 2 prediction:
 ```python
-python CL_Interface.py -i TestGenomes/MK075002.fasta
+python CL_Interface.py -i TestGenomes/AY133112.fasta
 ```
-`('MK075002.1', 'Staphylococcus', 2)`
+`('AY133112.1', 'Vibrio', 2)`
 
 Level 3 prediction:
 ```python
-python CL_Interface.py -i TestGenomes/AY133112.fasta
+python CL_Interface.py -i TestGenomes/MT074469.fasta
 ```
-`('AY133112.1', 'Vibrio', 3)`
+`('MT074469.1', 'Salmonella', 3)`
 
 Level 4 prediction (note that level 4 predictions do not return a genus):
 ```python
-python CL_Interface.py -i TestGenomes/MT074469.fasta
+python CL_Interface.py -i TestGenomes/MT074470.fasta
 ```
-`('MT074469.1', 'Enterobacterales', 4)`
+`('MT074470.1', 'Enterobacterales', 4)`
 
 ### Options
 
