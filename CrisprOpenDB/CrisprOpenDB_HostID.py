@@ -137,7 +137,9 @@ class PhageHostFinder:
             fasta_result_table.to_csv("{}.csv".format(fasta_result_table["Query"].iloc[0]))
 
         fasta_result_table = fasta_result_table[fasta_result_table.gap <= 0]
-        fasta_result_table  = fasta_result_table[fasta_result_table.true_num_mismatch <= n_mismatch]
+        mismatch_num_criterion = min(np.min(fasta_result_table.true_num_mismatch), n_mismatch)
+
+        fasta_result_table  = fasta_result_table[fasta_result_table.true_num_mismatch <= mismatch_num_criterion]
 
         if fasta_result_table.empty:
             if report:
