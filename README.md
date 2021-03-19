@@ -15,7 +15,7 @@ conda create -c conda-forge --name CrisprOpenDB_env --file conda_env.txt
 Don't forget to activate the environment to use it: `conda activate CrisprOpenDB_env`.
 You can now install the tool: `python setup.py install`.
 
-To use this program, you need to download the spacer database and the sqlite file (http://crispr.genome.ulaval.ca/dash/PhageHostIdentifier_DBfiles.zip) and unzip the files in the `CrisprOpenDB/SpacersDB/` directory. Note that files are quite large. The download size is about 800Mo for the compressed file. Once unzipped, file sizes will be approximately 600Mo for the spacer database and 3.8Go for the sqlite file. If you plan on using Blast to run the program, you need to build the blast database. Instructions for this optional step are at the end of this README file.
+To use this program, you need to download the spacer database and the sqlite file (http://crispr.genome.ulaval.ca/dash/PhageHostIdentifier_DBfiles.zip) and unzip the files in the `CrisprOpenDB/SpacersDB/` directory. Note that files are quite large. The download size is about 800Mo for the compressed file. Once unzipped, file sizes will be approximately 600Mo for the spacer database and 3.8Go for the sqlite file. If you plan on using Blast to run the program, you need to build the blast database. Instructions for this optional step are at the end of this README file with instructions on how to install Blast if it not already installed on your computer.
 
 Once these steps are complete, don't forget to go back to the initial directory to run the program. You can now try your installation with one of our test genome, as explained below.
 
@@ -55,10 +55,16 @@ python CL_Interface.py -i TestGenomes/MT074470.fasta
 ```
 `('MT074470.1', 'Enterobacterales', 4)`
 
-### Options
+### Options and additional information for installation
 
-Alignment can be done using `blastn` or `fasta36`. If using BLAST, please use `makeblastdb` before running. Here is the command line you should use when running `makeblastdb` from the `CrisprOpenDB/SpacersDB/` directory:
-```python
+Alignment can be done using `blastn` or `fasta36`. To install Blast inside the Anaconda environment run:
+```
+conda activate CrisprOpenDB_env
+conda install -c bioconda blast
+```
+
+If using BLAST, you also need to use `makeblastdb` before running the phage host identification tool. Here is the command line you should use when running `makeblastdb` from the `CrisprOpenDB/SpacersDB/` directory:
+```
 makeblastdb -in SpacersDB.fasta -dbtype nucl -out SpacersDB
 ```
 If you wish, you can also provide your own BLAST or FASTA database to perform the alignment.
