@@ -1,7 +1,7 @@
 # CrisprOpenDB
 
 This command-line host prediction tool was implemented to run predictions for large numbers of phage genomes and to offer a more customized host prediction process. The method is described in the following paper, that you should cite in publications:
-> Moïra B Dion, Pier-Luc Plante, Edwige Zufferey, Shiraz A Shah, Jacques Corbeil, Sylvain Moineau, Streamlining CRISPR spacer-based bacterial host predictions to decipher the viral dark matter, Nucleic Acids Research, 2021;, gkab133, https://doi.org/10.1093/nar/gkab133
+> Moïra B Dion, Pier-Luc Plante, Edwige Zufferey, Shiraz A Shah, Jacques Corbeil, Sylvain Moineau, Streamlining CRISPR spacer-based bacterial host predictions to decipher the viral dark matter, *Nucleic Acids Research*, Volume 49, Issue 6, 6 April 2021, Pages 3127–3138, https://doi.org/10.1093/nar/gkab133
 
 ### Prerequisites
 
